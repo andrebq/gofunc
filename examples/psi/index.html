@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PSI Model — Ada vs Theirs</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 16px; color: #222 }
+    h1 { font-size: 18px; margin-bottom: 12px }
+    .container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+    .card { border: 1px solid #ddd; padding: 10px; border-radius: 6px; background: #fafafa }
+    .block { margin-bottom: 10px }
+    label { display:block; font-weight:600; margin-bottom:6px; font-size:13px }
+    textarea { width: 100%; box-sizing: border-box; resize: vertical; font-family: monospace; font-size:13px }
+    .actions { margin-top: 14px; padding: 10px; border: 1px solid #eee; background: #fff; display:flex; gap:8px; justify-content:center }
+    button { padding: 8px 12px; cursor: pointer; border:1px solid #bbb; background:#f5f5f5; border-radius:4px }
+    .full { grid-column: 1 / -1 }
+    @media (max-width: 720px) { .container { grid-template-columns: 1fr } }
+  </style>
+</head>
+<body>
+  <h1>PSI Model — Ada vs Theirs</h1>
+
+  <form method="POST" id="psiForm" action="/psi">
+    <div class="actions">
+      <button type="submit" name="action" value="update_our_masks">Step 1: Update our masks</button>
+  <button type="submit" name="action" value="update_double_masked">Step 2: Update double masked</button>
+      <button type="submit" name="action" value="compute_intersection">Step 3: Compute intersection</button>
+    </div>
+    <div class="container">
+      <div class="card" id="ada">
+        <h2 style="margin:0 0 8px 0;font-size:15px">Ada</h2>
+  <div class="block">
+    <label for="ada.emails">Emails ({{len .Ada.Emails}} items)</label>
+    <textarea id="ada.emails" name="ada.emails" rows="6" placeholder="one email per line">{{- range $i, $e := .Ada.Emails -}}
+{{$e}}
+{{ end -}}</textarea>
+  </div>
+  <div class="block">
+    <label for="ada.our_masks">OurMasks ({{len .Ada.OurMasks}} items)</label>
+    <textarea id="ada.our_masks" name="ada.our_masks" rows="6" placeholder="one masked email (base64 URL) per line">{{- range .Ada.OurMasks -}}
+{{. | printf "%v" }}
+{{ end -}}</textarea>
+  </div>
+  <div class="block">
+    <label for="ada.double_masked">DoubleMasked ({{len .Ada.DoubleMasked}} items)</label>
+    <textarea id="ada.double_masked" name="ada.double_masked" rows="6" placeholder="one masked email (base64 URL) per line">{{- range .Ada.DoubleMasked -}}
+{{. | printf "%v" }}
+{{ end -}}</textarea>
+  </div>
+      </div>
+
+      <div class="card" id="theirs">
+        <h2 style="margin:0 0 8px 0;font-size:15px">Theirs</h2>
+  <div class="block">
+    <label for="theirs.emails">Emails ({{len .Theirs.Emails}} items)</label>
+    <textarea id="theirs.emails" name="theirs.emails" rows="6" placeholder="one email per line">{{- range .Theirs.Emails -}}
+{{. | printf "%v" }}
+{{ end -}}</textarea>
+  </div>
+  <div class="block">
+    <label for="theirs.our_masks">OurMasks ({{len .Theirs.OurMasks}} items)</label>
+    <textarea id="theirs.our_masks" name="theirs.our_masks" rows="6" placeholder="one masked email (base64 URL) per line">{{- range .Theirs.OurMasks -}}
+{{. | printf "%v" }}
+{{ end -}}</textarea>
+  </div>
+  <div class="block">
+    <label for="theirs.double_masked">DoubleMasked ({{len .Theirs.DoubleMasked}} items)</label>
+    <textarea id="theirs.double_masked" name="theirs.double_masked" rows="6" placeholder="one masked email (base64 URL) per line">{{- range .Theirs.DoubleMasked -}}
+{{. | printf "%v" }}
+{{ end -}}</textarea>
+  </div>
+      </div>
+
+      <div class="card full">
+        <h2 style="margin:0 0 8px 0;font-size:15px">Intersection</h2>
+  <div class="block">
+    <label for="intersection">Intersection ({{len .Intersection}} items)</label>
+    <textarea id="intersection" name="intersection" rows="6" placeholder="one masked email (base64 URL) per line">{{- range .Intersection -}}
+{{. | printf "%v" }}
+{{ end -}}</textarea>
+  </div>
+      </div>
+    </div>
+
+  </form>
+
+  <script>
+    // On submit, split each textarea into multiple hidden inputs with the same name
+    (function(){
+      var form = document.getElementById('psiForm');
+  var names = ['ada.emails','ada.our_masks','ada.double_masked','theirs.emails','theirs.our_masks','theirs.double_masked','intersection'];
+      function removeSplits(){
+        var old = form.querySelectorAll('input[type=hidden].split');
+        old.forEach(function(n){ n.parentNode.removeChild(n); });
+      }
+      form.addEventListener('submit', function(ev){
+        removeSplits();
+        names.forEach(function(n){
+          var ta = document.getElementsByName(n)[0];
+          if(!ta) return;
+          var lines = ta.value.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(function(s){ return s.length>0; });
+          lines.forEach(function(l){
+            var inp = document.createElement('input');
+            inp.type = 'hidden'; inp.name = n; inp.value = l; inp.className = 'split';
+            form.appendChild(inp);
+          });
+        });
+        // allow normal submit to continue
+      });
+    })();
+  </script>
+</body>
+</html>
