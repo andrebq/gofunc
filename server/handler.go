@@ -82,6 +82,7 @@ func (h *handler) recompile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	slog.Info("Recompiling function", "name", funcName, "addr", r.RemoteAddr, "forwarding", r.Header.Get("X-Forwarded-For"))
 	zipFile, err := os.CreateTemp("", "gofaas-upload-*.zip")
 	if err != nil {
 		http.Error(w, "failed to create temp zipfile: "+err.Error(), http.StatusInternalServerError)
@@ -91,20 +92,22 @@ func (h *handler) recompile(w http.ResponseWriter, r *http.Request) {
 		zipFile.Close()
 		os.Remove(zipFile.Name())
 	}()
-
 	// Copy body to zip file
 	if _, err := io.Copy(zipFile, r.Body); err != nil {
 		http.Error(w, "failed to read zip from body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 	zipFile.Close()
+	slog.Info("Uploaded zip file", "path", zipFile.Name())
 
 	// Compile
+	start := time.Now()
 	fn, err := funcs.Compile(zipFile.Name(), filepath.Join(h.srcDir, funcName), filepath.Join(h.binDir, funcName), funcName)
 	if err != nil {
 		http.Error(w, "compile error: "+err.Error(), http.StatusBadRequest)
 		return
 	}
+	slog.Info("Compiled function", "name", funcName, "binfile", fn.Bin(), "duration", time.Since(start))
 	err = h.registerFunc(fn)
 	if err != nil {
 		slog.Error("Failed to register function", "error", err)

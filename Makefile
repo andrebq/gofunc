@@ -26,7 +26,9 @@ run-docker: docker-build
 		--name gofunc \
 		andrebq/gofunc:latest
 
+gofuncServer=http://localhost:9000
 upload: build
-	[[ -n "$(name)" ]] || { echo "make name=<name> is required"; exit 1; }
-	[[ -n "$(srcDir)" ]] || { echo "make srcDir=<src dir> is required"; exit 1; }
-	$(PWD)/dist/gofunc upload --dir $(srcDir) --name $(name)
+	@[[ -n "$(name)" ]] || { echo "make name=<name> is required"; exit 1; }
+	@[[ -n "$(srcDir)" ]] || { echo "make srcDir=<src dir> is required"; exit 1; }
+	@[[ -n "$(gofuncServer)" ]] || { echo "make gofuncServer=<gofunc server> is required"; exit 1; }
+	$(PWD)/dist/gofunc upload --dir $(srcDir) --name $(name) --addr $(gofuncServer)
