@@ -6,7 +6,7 @@ ADD ./ ./
 RUN go build -o gofunc ./cmd/gofunc
 
 
-FROM alpine:latest
+FROM golang:1-alpine
 COPY --from=builder /app/gofunc /usr/local/bin/
 ENV BASE_DIR=/var/gofunc
 ENV BIND_PORT=9000

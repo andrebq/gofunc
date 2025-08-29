@@ -26,6 +26,15 @@ type (
 	}
 )
 
+func (f *Func) Name() string {
+	bin := filepath.Base(f.binfile)
+	return strings.TrimSuffix(bin, filepath.Ext(bin))
+}
+
+func (f *Func) Bin() string {
+	return f.binfile
+}
+
 func Compile(zipfile string, srcdir string, bindir string, funcname string) (*Func, error) {
 	// Open the zip archive
 	zr, err := zip.OpenReader(zipfile)
