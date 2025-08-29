@@ -37,7 +37,14 @@ func NewHandler(ctx context.Context, tmpDir, binDir string) *handler {
 	h.m.HandleFunc("PUT /_admin/{func_name}/recompile", h.recompile)
 	h.m.HandleFunc("/{func_name}/", h.invoke)
 	h.m.HandleFunc("/{func_name}", h.invoke)
+	h.m.HandleFunc("/_health/check", h.healthCheck)
 	return h
+}
+
+func (h *handler) healthCheck(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"status":"ok"}`))
 }
 
 func (h *handler) recompile(w http.ResponseWriter, r *http.Request) {

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/andrebq/gofunc/installers"
 	"github.com/andrebq/gofunc/pkg/uploader"
 
 	"github.com/andrebq/gofunc/server"
@@ -28,8 +29,59 @@ func newApp() *cli.App {
 	app.Commands = []*cli.Command{
 		serveCmd(),
 		uploadCmd(),
+		installCmd(),
 	}
 	return app
+}
+
+func installCmd() *cli.Command {
+	return &cli.Command{
+		Name:  "install",
+		Usage: "Install the GoFunc server in your scheduler of preference",
+		Subcommands: []*cli.Command{
+			installK8SCmd(),
+		},
+	}
+}
+
+func installK8SCmd() *cli.Command {
+	var yamlFile string
+	var namespace string
+	var name string = "gofunc"
+	var image string = "andrebq/gofunc:latest"
+	return &cli.Command{
+		Name:  "k8s",
+		Usage: "Renders a GoFunc server manifest on Kubernetes, you must provide a Yaml file to be used as template (or stdin).\nThe template is assumed to be trustworthy",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:        "yaml-template",
+				Usage:       "Path to yaml template, use '-' for stdin",
+				Destination: &yamlFile,
+				Required:    true,
+			},
+			&cli.StringFlag{
+				Name:        "namespace",
+				Usage:       "Kubernetes namespace",
+				Destination: &namespace,
+				Required:    true,
+			},
+			&cli.StringFlag{
+				Name:        "name",
+				Usage:       "Kubernetes resource name",
+				Value:       name,
+				Destination: &name,
+			},
+			&cli.StringFlag{
+				Name:        "image",
+				Usage:       "Container image",
+				Value:       image,
+				Destination: &image,
+			},
+		},
+		Action: func(ctx *cli.Context) error {
+			return installers.K8S(ctx.Context, ctx.App.Writer, yamlFile, name, namespace, image)
+		},
+	}
 }
 
 func uploadCmd() *cli.Command {

@@ -9,6 +9,9 @@ build:
 	mkdir -p dist
 	go build -o dist/gofunc ./cmd/gofunc
 
+docker-build:
+	docker build -t andrebq/gofunc:latest .
+
 run: build
 	mkdir -p $(PWD)/localfiles/server
 	$(PWD)/dist/gofunc serve --base-dir $(PWD)/localfiles/server

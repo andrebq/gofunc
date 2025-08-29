@@ -57,7 +57,9 @@ func (z *ZipWriter) Close() error {
 func TestHandler_RecompileAndInvoke(t *testing.T) {
 	tmpDir := t.TempDir()
 	binDir := t.TempDir()
-	h := NewHandler(context.Background(), tmpDir, binDir)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	h := NewHandler(ctx, tmpDir, binDir)
 
 	// Create a minimal Go function as a zip
 	mainGo := `package main
